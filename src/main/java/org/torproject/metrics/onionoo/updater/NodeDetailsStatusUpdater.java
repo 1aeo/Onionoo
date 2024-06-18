@@ -952,7 +952,7 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
             detailsStatus.setBridgedbDistributor(bridgedbDistributor);
             String[] blocklistParts =  assignment.split("blocklist=");
             if (blocklistParts != null && blocklistParts.length > 1) {
-              String[] blocklistCountries = locklistParts[1].split(" ");
+              String[] blocklistCountries = blocklistParts[1].split(" ");
               if (blocklistCountries != null && blocklistCountries.length > 1) {
                 List<String> blocklist =
                     Arrays.asList(blocklistCountries[1].split(","));
