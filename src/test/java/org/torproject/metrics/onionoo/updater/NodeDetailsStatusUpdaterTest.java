@@ -105,7 +105,8 @@ public class NodeDetailsStatusUpdaterTest {
   private static final String BPA = "@type bridge-pool-assignment 1.0\n"
       + "bridge-pool-assignment 2022-03-18 23:33:42\n"
       + "6306C870BE7415EB7167ED2E9C1224F28B7E6C61 moat "
-      + "transport=obfs4 ip=4 blocklist=ru\n";
+      + "transport=obfs4 ip=4 blocklist=ru distributed=true "
+      + "state=functional bandwidth=accepted ratio=1.267\n";
 
   private static final String BRIDGE1 = "@type bridge-server-descriptor 1.2\n"
       + "router DockerObfs4Bridge 10.136.176.127 50451 0 0\n"
