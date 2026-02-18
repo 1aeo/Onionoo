@@ -16,7 +16,8 @@ public class DetailsStatusTest {
     DetailsStatus detailsStatus = new DetailsStatus();
     detailsStatus.setBandwidthRate(640000);
     detailsStatus.setOverloadGeneralTimestamp(1628168400000L);
-    assertEquals(new Long(640000), new Long(detailsStatus.getBandwidthRate()));
+    assertEquals(Long.valueOf(640000),
+        Long.valueOf(detailsStatus.getBandwidthRate()));
     assertEquals(
         "{\"bandwidth_rate\":640000,"
         + "\"overload_general_timestamp\":1628168400000,"

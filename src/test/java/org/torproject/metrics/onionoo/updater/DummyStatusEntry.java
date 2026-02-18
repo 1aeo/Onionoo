@@ -6,6 +6,7 @@ package org.torproject.metrics.onionoo.updater;
 import org.torproject.descriptor.NetworkStatusEntry;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -106,5 +107,19 @@ public class DummyStatusEntry implements NetworkStatusEntry {
   public SortedMap<String, SortedSet<Long>> getProtocols() {
     return null;
   }
-}
 
+  @Override
+  public SortedMap<String, Double> getStats() {
+    return null;
+  }
+
+  @Override
+  public Set<String> getSupportedConsensusMethods() {
+    return null;
+  }
+
+  @Override
+  public Map<String, SortedSet<Integer>> getHashToConsensusMethods() {
+    return null;
+  }
+}

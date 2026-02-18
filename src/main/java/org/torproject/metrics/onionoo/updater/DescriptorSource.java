@@ -125,6 +125,10 @@ public class DescriptorSource {
     this.readDescriptors(DescriptorType.RELAY_CONSENSUSES,
         DescriptorHistory.RELAY_CONSENSUS_HISTORY, true);
     logger.debug("Reading recent {} ...",
+        DescriptorType.RELAY_MICRODESCRIPTORS);
+    this.readDescriptors(DescriptorType.RELAY_MICRODESCRIPTORS,
+        DescriptorHistory.RELAY_MICRODESC_HISTORY, true);
+    logger.debug("Reading recent {} ...",
         DescriptorType.BRIDGE_SERVER_DESCRIPTORS);
     this.readDescriptors(DescriptorType.BRIDGE_SERVER_DESCRIPTORS,
         DescriptorHistory.BRIDGE_SERVER_HISTORY, false);
@@ -189,6 +193,9 @@ public class DescriptorSource {
           relay = true;
         } else if (annotation.startsWith("@type extra-info 1.")) {
           descriptorType = DescriptorType.RELAY_EXTRA_INFOS;
+          relay = true;
+        } else if (annotation.startsWith("@type microdescriptor 1.")) {
+          descriptorType = DescriptorType.RELAY_MICRODESCRIPTORS;
           relay = true;
         } else if (annotation.startsWith("@type tordnsel 1.")) {
           descriptorType = DescriptorType.EXIT_LISTS;
@@ -272,4 +279,3 @@ public class DescriptorSource {
     return sb.toString();
   }
 }
-

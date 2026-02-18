@@ -162,6 +162,27 @@ public class DetailsStatus extends Document {
     return this.indirectFamily;
   }
 
+  private List<String> familyIds;
+
+  public void setFamilyIds(List<String> familyIds) {
+    this.familyIds = (familyIds != null && !familyIds.isEmpty())
+        ? familyIds : null;
+  }
+
+  public List<String> getFamilyIds() {
+    return this.familyIds;
+  }
+
+  private String familyCert;
+
+  public void setFamilyCert(String familyCert) {
+    this.familyCert = familyCert;
+  }
+
+  public String getFamilyCert() {
+    return this.familyCert;
+  }
+
   private Map<String, List<String>> exitPolicyV6Summary;
 
   public void setExitPolicyV6Summary(

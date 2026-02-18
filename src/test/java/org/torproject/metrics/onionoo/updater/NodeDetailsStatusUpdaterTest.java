@@ -12,6 +12,7 @@ import org.torproject.descriptor.BridgePoolAssignment;
 import org.torproject.descriptor.Descriptor;
 import org.torproject.descriptor.DescriptorParser;
 import org.torproject.descriptor.DescriptorSourceFactory;
+import org.torproject.descriptor.Microdescriptor;
 import org.torproject.descriptor.ServerDescriptor;
 import org.torproject.metrics.onionoo.docs.DetailsStatus;
 import org.torproject.metrics.onionoo.docs.DocumentStoreFactory;
@@ -19,9 +20,12 @@ import org.torproject.metrics.onionoo.docs.DummyDocumentStore;
 
 import org.junit.Before;
 import org.junit.Test;
-
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class NodeDetailsStatusUpdaterTest {
 
@@ -99,8 +103,46 @@ public class NodeDetailsStatusUpdaterTest {
     assertNotNull(dd);
   }
 
+  @Test
+  public void testFamilyCertFromServerDescriptor() {
+    NodeDetailsStatusUpdater ndsu = new NodeDetailsStatusUpdater(null, null);
+    DescriptorParser dp = DescriptorSourceFactory.createDescriptorParser();
+    String descString = RELAY1 + PUB1 + RELAY2 + FAMILY_CERT + POLICY1 + RELAY3;
+    for (Descriptor desc : dp.parseDescriptors(descString.getBytes(),
+        new File("dummy"), "dummy")) {
+      assertTrue(desc.getClass().getName(), desc instanceof ServerDescriptor);
+      ndsu.processDescriptor(desc, true);
+    }
+    DetailsStatus dd = this.docStore.getDocument(DetailsStatus.class, FP);
+    assertNotNull("docs: " + this.docStore.storedDocuments, dd);
+    assertEquals("Family cert should be parsed from server descriptor.",
+        FAMILY_CERT_BLOCK, dd.getFamilyCert());
+  }
+
+  @Test
+  public void testFamilyIdsFromMicrodescriptor() throws Exception {
+    NodeDetailsStatusUpdater ndsu = new NodeDetailsStatusUpdater(null, null);
+    Field mapField = NodeDetailsStatusUpdater.class.getDeclaredField(
+        "microdescriptorDigestToFingerprint");
+    mapField.setAccessible(true);
+    @SuppressWarnings("unchecked")
+    Map<String, String> digestToFingerprint =
+        (Map<String, String>) mapField.get(ndsu);
+    digestToFingerprint.put(MICRODESC_DIGEST, FP);
+    DummyMicrodescriptor micro = new DummyMicrodescriptor(
+        MICRODESC_DIGEST,
+        Arrays.asList("wweKJrJxUDs1EdtFFHCDtvVgTKftOC/crUl1mYJv830"));
+    ndsu.processDescriptor(micro, true);
+    DetailsStatus dd = this.docStore.getDocument(DetailsStatus.class, FP);
+    assertNotNull("docs: " + this.docStore.storedDocuments, dd);
+    assertEquals("Family ids should be stored from microdescriptor.",
+        micro.getFamilyIds(), dd.getFamilyIds());
+  }
+
   private static final String FP = "42CAF9C0588BBADDD338025E8F2D3CCF35CEEC25";
   private static final String FPB = "6306C870BE7415EB7167ED2E9C1224F28B7E6C61";
+  private static final String MICRODESC_DIGEST =
+      "ER1AC4KqT//o3pJDrqlmej5G2qW1EQYEr/IrMQHNc6I";
 
   private static final String BPA = "@type bridge-pool-assignment 1.0\n"
       + "bridge-pool-assignment 2022-03-18 23:33:42\n"
@@ -184,6 +226,14 @@ public class NodeDetailsStatusUpdaterTest {
 
   private static final String POLICY2 = "reject *:*\n";
 
+  private static final String FAMILY_CERT_BLOCK =
+      "-----BEGIN ED25519 CERT-----\n"
+      + "AQoABkGXZm9vYmF6YmF6YmF6\n"
+      + "-----END ED25519 CERT-----";
+
+  private static final String FAMILY_CERT = "family-cert\n"
+      + FAMILY_CERT_BLOCK + "\n";
+
   private static final String RELAY3
       = "router-sig-ed25519 8pfPgYjlpwDoyESOZJHQwMwpmoyWCFg9dcswb8RTra4FT5jgol"
       + "HTgkX51h/yUXBx7jUibs2EVaRTOPm9TuiVDA\n"
@@ -194,4 +244,104 @@ public class NodeDetailsStatusUpdaterTest {
       + "DXd4yh+SZ86zaAWLUbr1VhRvSLWbFJwNn/aAQdAu70M=\n"
       + "-----END SIGNATURE-----\n";
 
+  private static class DummyMicrodescriptor implements Microdescriptor {
+    private final String digestSha256Base64;
+    private final List<String> familyIds;
+
+    private DummyMicrodescriptor(String digestSha256Base64,
+        List<String> familyIds) {
+      this.digestSha256Base64 = digestSha256Base64;
+      this.familyIds = familyIds;
+    }
+
+    @Override
+    public String getDigestSha256Base64() {
+      return this.digestSha256Base64;
+    }
+
+    @Override
+    public String getDigestSha256Hex() {
+      return null;
+    }
+
+    @Override
+    public String getOnionKey() {
+      return null;
+    }
+
+    @Override
+    public String getNtorOnionKey() {
+      return null;
+    }
+
+    @Override
+    public List<String> getOrAddresses() {
+      return null;
+    }
+
+    @Override
+    public List<String> getFamilyEntries() {
+      return null;
+    }
+
+    @Override
+    public String getDefaultPolicy() {
+      return null;
+    }
+
+    @Override
+    public String getPortList() {
+      return null;
+    }
+
+    @Override
+    public String getIpv6DefaultPolicy() {
+      return null;
+    }
+
+    @Override
+    public String getIpv6PortList() {
+      return null;
+    }
+
+    @Override
+    public String getRsa1024Identity() {
+      return null;
+    }
+
+    @Override
+    public String getEd25519Identity() {
+      return null;
+    }
+
+    @Override
+    public List<String> getFamilyIds() {
+      return this.familyIds;
+    }
+
+    @Override
+    public byte[] getRawDescriptorBytes() {
+      return null;
+    }
+
+    @Override
+    public int getRawDescriptorLength() {
+      return 0;
+    }
+
+    @Override
+    public List<String> getAnnotations() {
+      return null;
+    }
+
+    @Override
+    public List<String> getUnrecognizedLines() {
+      return null;
+    }
+
+    @Override
+    public File getDescriptorFile() {
+      return null;
+    }
+  }
 }

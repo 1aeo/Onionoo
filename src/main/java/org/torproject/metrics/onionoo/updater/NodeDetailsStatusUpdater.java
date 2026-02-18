@@ -10,6 +10,7 @@ import org.torproject.descriptor.BridgestrapTestResult;
 import org.torproject.descriptor.Descriptor;
 import org.torproject.descriptor.ExitList;
 import org.torproject.descriptor.ExtraInfoDescriptor;
+import org.torproject.descriptor.Microdescriptor;
 import org.torproject.descriptor.NetworkStatusEntry;
 import org.torproject.descriptor.RelayNetworkStatusConsensus;
 import org.torproject.descriptor.ServerDescriptor;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -122,6 +124,8 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
     this.descriptorSource.registerDescriptorListener(this,
         DescriptorType.RELAY_SERVER_DESCRIPTORS);
     this.descriptorSource.registerDescriptorListener(this,
+        DescriptorType.RELAY_MICRODESCRIPTORS);
+    this.descriptorSource.registerDescriptorListener(this,
         DescriptorType.BRIDGE_STATUSES);
     this.descriptorSource.registerDescriptorListener(this,
         DescriptorType.BRIDGE_SERVER_DESCRIPTORS);
@@ -141,6 +145,8 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
   public void processDescriptor(Descriptor descriptor, boolean relay) {
     if (descriptor instanceof ServerDescriptor && relay) {
       this.processRelayServerDescriptor((ServerDescriptor) descriptor);
+    } else if (descriptor instanceof Microdescriptor && relay) {
+      this.processRelayMicrodescriptor((Microdescriptor) descriptor);
     } else if (descriptor instanceof ExitList) {
       this.processExitList((ExitList) descriptor);
     } else if (descriptor instanceof RelayNetworkStatusConsensus) {
@@ -161,6 +167,9 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
   }
 
   private Map<String, SortedSet<String>> declaredFamilies = new HashMap<>();
+
+  private Map<String, String> microdescriptorDigestToFingerprint =
+      new HashMap<>();
 
   private void processRelayServerDescriptor(
       ServerDescriptor descriptor) {
@@ -191,6 +200,7 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
     detailsStatus.setExitPolicy(descriptor.getExitPolicyLines());
     detailsStatus.setContact(descriptor.getContact());
     detailsStatus.setPlatform(descriptor.getPlatform());
+    detailsStatus.setFamilyCert(descriptor.getFamilyCert());
     SortedSet<String> declaredFamily = new TreeSet<>();
     if (descriptor.getFamilyEntries() != null) {
       for (String familyMember : descriptor.getFamilyEntries()) {
@@ -219,6 +229,24 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
     detailsStatus.setHibernating(descriptor.isHibernating() ? true :
         null);
     detailsStatus.setAdvertisedOrAddresses(descriptor.getOrAddresses());
+    this.documentStore.store(detailsStatus, fingerprint);
+  }
+
+  private void processRelayMicrodescriptor(Microdescriptor descriptor) {
+    String digest = descriptor.getDigestSha256Base64();
+    if (digest == null) {
+      return;
+    }
+    String fingerprint = this.microdescriptorDigestToFingerprint.get(digest);
+    if (fingerprint == null) {
+      return;
+    }
+    DetailsStatus detailsStatus = this.documentStore.retrieve(
+        DetailsStatus.class, true, fingerprint);
+    if (detailsStatus == null) {
+      detailsStatus = new DetailsStatus();
+    }
+    detailsStatus.setFamilyIds(descriptor.getFamilyIds());
     this.documentStore.store(detailsStatus, fingerprint);
   }
 
@@ -261,12 +289,18 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
     long validAfterMillis = consensus.getValidAfterMillis();
     if (validAfterMillis > this.relaysLastValidAfterMillis) {
       this.relaysLastValidAfterMillis = validAfterMillis;
+      this.microdescriptorDigestToFingerprint.clear();
     }
 
     for (Map.Entry<String, NetworkStatusEntry> e :
         consensus.getStatusEntries().entrySet()) {
       String fingerprint = e.getKey();
       NetworkStatusEntry entry = e.getValue();
+      if (entry.getMicrodescriptorDigestsSha256Base64() != null) {
+        for (String digest : entry.getMicrodescriptorDigestsSha256Base64()) {
+          this.microdescriptorDigestToFingerprint.put(digest, fingerprint);
+        }
+      }
       NodeStatus nodeStatus = this.knownNodes.get(fingerprint);
       if (nodeStatus == null) {
         nodeStatus = new NodeStatus(fingerprint);
@@ -945,19 +979,32 @@ public class NodeDetailsStatusUpdater implements DescriptorListener,
             .containsKey(fingerprint)) {
           detailsStatus.setBridgePoolAssignmentPublished(
               this.latestBridgePoolAssignments.getPublishedMillis());
-          String assignment = this.latestBridgePoolAssignments.getEntries()
-              .get(fingerprint);
-          if (null != assignment && !assignment.isEmpty()) {
-            String bridgedbDistributor = assignment.split(" ")[0];
-            detailsStatus.setBridgedbDistributor(bridgedbDistributor);
-            String[] blocklistParts =  assignment.split("blocklist=");
-            if (blocklistParts != null && blocklistParts.length > 1) {
-              String[] blocklistCountries = blocklistParts[1].split(" ");
-              if (blocklistCountries != null && blocklistCountries.length > 1) {
-                List<String> blocklist =
-                    Arrays.asList(blocklistCountries[1].split(","));
-                detailsStatus.setBlocklist(blocklist);
+          List<String> assignments = this.latestBridgePoolAssignments
+              .getEntries().get(fingerprint);
+          if (null != assignments && !assignments.isEmpty()) {
+            SortedSet<String> distributors = new TreeSet<>();
+            SortedSet<String> blocklistValues = new TreeSet<>();
+            for (String assignment : assignments) {
+              if (assignment == null || assignment.isEmpty()) {
+                continue;
               }
+              distributors.add(assignment.split(" ")[0]);
+              String[] blocklistParts = assignment.split("blocklist=");
+              if (blocklistParts != null && blocklistParts.length > 1) {
+                String[] blocklistCountries = blocklistParts[1].split(" ");
+                if (blocklistCountries != null
+                    && blocklistCountries.length > 1) {
+                  blocklistValues.addAll(
+                      Arrays.asList(blocklistCountries[1].split(",")));
+                }
+              }
+            }
+            if (!distributors.isEmpty()) {
+              detailsStatus.setBridgedbDistributor(
+                  String.join(",", distributors));
+            }
+            if (!blocklistValues.isEmpty()) {
+              detailsStatus.setBlocklist(new ArrayList<>(blocklistValues));
             }
           }
         } else {

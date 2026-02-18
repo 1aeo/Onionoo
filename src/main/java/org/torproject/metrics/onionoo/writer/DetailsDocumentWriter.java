@@ -153,6 +153,8 @@ public class DetailsDocumentWriter implements DocumentWriter {
       detailsDocument.setIndirectFamily(
           new TreeSet<>(detailsStatus.getIndirectFamily()));
     }
+    detailsDocument.setFamilyIds(detailsStatus.getFamilyIds());
+    detailsDocument.setFamilyCert(detailsStatus.getFamilyCert());
     detailsDocument.setExitPolicyV6Summary(
         detailsStatus.getExitPolicyV6Summary());
     detailsDocument.setHibernating(detailsStatus.isHibernating());

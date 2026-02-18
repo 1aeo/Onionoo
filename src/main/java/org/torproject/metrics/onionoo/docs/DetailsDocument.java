@@ -429,6 +429,27 @@ public class DetailsDocument extends Document {
     return this.indirectFamily;
   }
 
+  private List<String> familyIds;
+
+  public void setFamilyIds(List<String> familyIds) {
+    this.familyIds = (familyIds != null && !familyIds.isEmpty())
+        ? familyIds : null;
+  }
+
+  public List<String> getFamilyIds() {
+    return this.familyIds;
+  }
+
+  private String familyCert;
+
+  public void setFamilyCert(String familyCert) {
+    this.familyCert = familyCert;
+  }
+
+  public String getFamilyCert() {
+    return this.familyCert;
+  }
+
   private Float consensusWeightFraction;
 
   /** Sets the consensus weight fraction to the given value, but only if

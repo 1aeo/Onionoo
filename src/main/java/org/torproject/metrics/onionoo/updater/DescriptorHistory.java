@@ -7,6 +7,7 @@ public enum DescriptorHistory {
 
   RELAY_CONSENSUS_HISTORY("relay-consensus-history"),
   RELAY_SERVER_HISTORY("relay-server-history"),
+  RELAY_MICRODESC_HISTORY("relay-microdescriptor-history"),
   RELAY_EXTRAINFO_HISTORY("relay-extrainfo-history"),
   EXIT_LIST_HISTORY("exit-list-history"),
   BRIDGE_STATUS_HISTORY("bridge-status-history"),
@@ -27,4 +28,3 @@ public enum DescriptorHistory {
   }
 
 }
-

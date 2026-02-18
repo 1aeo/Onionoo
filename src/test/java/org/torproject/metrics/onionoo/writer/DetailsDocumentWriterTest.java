@@ -138,4 +138,28 @@ public class DetailsDocumentWriterTest {
     assertEquals("gabelmoo@torproject.org ( 2+6)",
         document.getContact());
   }
+
+  @Test
+  public void testFamilyIdsAndCert() {
+    DetailsStatus status = new DetailsStatus();
+    status.setRelay(true);
+    status.setFamilyIds(Arrays.asList(
+        "wweKJrJxUDs1EdtFFHCDtvVgTKftOC/crUl1mYJv830"));
+    status.setFamilyCert("-----BEGIN ED25519 CERT-----\n"
+        + "AQoABkGXZm9vYmFyYmF6\n"
+        + "-----END ED25519 CERT-----\n");
+    this.documentStore.addDocument(status, GABELMOO_FINGERPRINT);
+    DetailsDocumentWriter writer = new DetailsDocumentWriter();
+    writer.writeDocuments(-1L);
+    assertEquals("One document should be written.", 1,
+        this.documentStore.getPerformedStoreOperations());
+    DetailsDocument document = this.documentStore.getDocument(
+        DetailsDocument.class, GABELMOO_FINGERPRINT);
+    assertNotNull("There should be a document for the given fingerprint.",
+        document);
+    assertEquals("Family ids should be written to details document.",
+        status.getFamilyIds(), document.getFamilyIds());
+    assertEquals("Family cert should be written to details document.",
+        status.getFamilyCert(), document.getFamilyCert());
+  }
 }
