@@ -48,9 +48,9 @@
     <include name="commons-codec-1.15.jar"/>
     <include name="commons-compress-1.13.jar"/>
     <include name="commons-lang3-3.5.jar"/>
-    <include name="jackson-annotations-2.8.6.jar"/>
-    <include name="jackson-core-2.8.6.jar"/>
-    <include name="jackson-databind-2.8.6.jar"/>
+    <include name="jackson-annotations-2.15.3.jar"/>
+    <include name="jackson-core-2.15.3.jar"/>
+    <include name="jackson-databind-2.15.3.jar"/>
     <include name="logback-classic-1.1.9.jar"/>
     <include name="logback-core-1.1.9.jar"/>
     <include name="slf4j-api-1.7.22.jar"/>
