@@ -296,4 +296,26 @@ class NodeIndex {
   public Map<String, Set<String>> getBridgesByTransport() {
     return this.bridgesByTransport;
   }
+
+  private Map<String, Set<String>> relaysByFamilyId = null;
+
+  public void setRelaysByFamilyId(
+      Map<String, Set<String>> relaysByFamilyId) {
+    this.relaysByFamilyId = relaysByFamilyId;
+  }
+
+  public Map<String, Set<String>> getRelaysByFamilyId() {
+    return this.relaysByFamilyId;
+  }
+
+  private Map<String, Set<String>> relaysByFamilyCertHash = null;
+
+  public void setRelaysByFamilyCertHash(
+      Map<String, Set<String>> relaysByFamilyCertHash) {
+    this.relaysByFamilyCertHash = relaysByFamilyCertHash;
+  }
+
+  public Map<String, Set<String>> getRelaysByFamilyCertHash() {
+    return this.relaysByFamilyCertHash;
+  }
 }

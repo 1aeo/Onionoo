@@ -74,7 +74,8 @@ public class ResourceServlet extends HttpServlet {
           "country", "as", "as_name", "flag", "first_seen_days",
           "first_seen_since", "last_seen_days", "last_seen_since", "contact",
           "order", "limit", "offset", "fields", "family", "version", "os",
-          "host_name", "recommended_version", "overload_status", "transport"));
+          "host_name", "recommended_version", "overload_status", "transport",
+          "family_id", "family_cert"));
 
   private static Set<String> illegalSearchQualifiers =
       new HashSet<>(Arrays.asList(("search,fingerprint,order,limit,"
@@ -382,6 +383,22 @@ public class ResourceServlet extends HttpServlet {
         return;
       }
       rh.setTransport(transportParameter);
+    }
+    if (parameterMap.containsKey("family_id")) {
+      String familyIdParameter = parameterMap.get("family_id");
+      if (!familyIdParameterPattern.matcher(familyIdParameter).matches()) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        return;
+      }
+      rh.setFamilyId(familyIdParameter);
+    }
+    if (parameterMap.containsKey("family_cert")) {
+      String familyCertParameter = parameterMap.get("family_cert");
+      if (!familyCertParameterPattern.matcher(familyCertParameter).matches()) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+        return;
+      }
+      rh.setFamilyCertHash(familyCertParameter.toLowerCase());
     }
     if (parameterMap.containsKey("order")) {
       String[] order = this.parseOrderParameter(parameterMap.get("order"));
@@ -755,6 +772,12 @@ public class ResourceServlet extends HttpServlet {
     }
     return parameter.toLowerCase();
   }
+
+  private static Pattern familyIdParameterPattern =
+      Pattern.compile("^[0-9a-zA-Z+/=]{1,64}$");
+
+  private static Pattern familyCertParameterPattern =
+      Pattern.compile("^[0-9a-fA-F]{64}$");
 
   private static Pattern hostNameParameterPattern =
       Pattern.compile("^[0-9A-Za-z_.\\-]+$");

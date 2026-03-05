@@ -180,6 +180,8 @@ public class NodeIndexer implements ServletContextListener, Runnable {
     SortedMap<Integer, Set<String>> newRelaysByLastSeenDays = new TreeMap<>();
     SortedMap<Integer, Set<String>> newBridgesByLastSeenDays = new TreeMap<>();
     Map<String, Set<String>> newBridgesByTransport = new HashMap<>();
+    Map<String, Set<String>> newRelaysByFamilyId = new HashMap<>();
+    Map<String, Set<String>> newRelaysByFamilyCertHash = new HashMap<>();
     Set<SummaryDocument> currentRelays = new HashSet<>();
     Set<SummaryDocument> currentBridges = new HashSet<>();
     SortedSet<String> fingerprints = documentStore.list(
@@ -302,6 +304,22 @@ public class NodeIndexer implements ServletContextListener, Runnable {
         newRelaysByOverloadStatus.get(overloadStatus).add(
             hashedFingerprint);
       }
+      List<String> familyIds = entry.getFamilyIds();
+      if (null != familyIds) {
+        for (String familyId : familyIds) {
+          newRelaysByFamilyId.putIfAbsent(familyId, new HashSet<>());
+          newRelaysByFamilyId.get(familyId).add(fingerprint);
+          newRelaysByFamilyId.get(familyId).add(hashedFingerprint);
+        }
+      }
+      String familyCertHash = entry.getFamilyCertHash();
+      if (null != familyCertHash) {
+        newRelaysByFamilyCertHash.putIfAbsent(familyCertHash,
+            new HashSet<>());
+        newRelaysByFamilyCertHash.get(familyCertHash).add(fingerprint);
+        newRelaysByFamilyCertHash.get(familyCertHash).add(
+            hashedFingerprint);
+      }
     }
     for (SummaryDocument entry : currentBridges) {
       String hashedFingerprint = entry.getFingerprint().toUpperCase();
@@ -406,6 +424,8 @@ public class NodeIndexer implements ServletContextListener, Runnable {
     newNodeIndex.setRelaysByOverloadStatus(newRelaysByOverloadStatus);
     newNodeIndex.setBridgesByOverloadStatus(newBridgesByOverloadStatus);
     newNodeIndex.setBridgesByTransport(newBridgesByTransport);
+    newNodeIndex.setRelaysByFamilyId(newRelaysByFamilyId);
+    newNodeIndex.setRelaysByFamilyCertHash(newRelaysByFamilyCertHash);
     synchronized (this) {
       this.lastIndexed = updateStatusMillis;
       this.latestNodeIndex = newNodeIndex;

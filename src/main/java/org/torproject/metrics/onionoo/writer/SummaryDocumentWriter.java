@@ -4,11 +4,14 @@
 package org.torproject.metrics.onionoo.writer;
 
 import org.torproject.metrics.onionoo.docs.DateTimeHelper;
+import org.torproject.metrics.onionoo.docs.DetailsStatus;
 import org.torproject.metrics.onionoo.docs.DocumentStore;
 import org.torproject.metrics.onionoo.docs.DocumentStoreFactory;
 import org.torproject.metrics.onionoo.docs.NodeStatus;
 import org.torproject.metrics.onionoo.docs.SummaryDocument;
 import org.torproject.metrics.onionoo.util.FormattingUtils;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +108,16 @@ public class SummaryDocumentWriter implements DocumentWriter {
           asNumber, asName, contact, effectiveFamily, version,
           operatingSystem, verifiedHostNames,
           unverifiedHostNames, recommendedVersion, overloadStatus, transports);
+      DetailsStatus detailsStatus = this.documentStore.retrieve(
+          DetailsStatus.class, true, fingerprint);
+      if (detailsStatus != null) {
+        summaryDocument.setFamilyIds(detailsStatus.getFamilyIds());
+        String familyCert = detailsStatus.getFamilyCert();
+        if (familyCert != null && !familyCert.isEmpty()) {
+          summaryDocument.setFamilyCertHash(
+              DigestUtils.sha256Hex(familyCert));
+        }
+      }
       if (this.documentStore.store(summaryDocument, fingerprint)) {
         this.writtenDocuments++;
       }

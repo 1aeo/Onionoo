@@ -151,6 +151,10 @@ public class ResourceServletTest {
         new TreeSet<>(Arrays.asList(
             "ppp-62-216-201-221.dynamic.mnet-online.de")),
         null, true, false, Arrays.asList("obfs4"));
+    relayTorkaZ.setFamilyIds(Arrays.asList(
+        "Or+tKhdy84NCOAz/Qqk6KPxAdK4Thw/meE58qv1jjY8"));
+    relayTorkaZ.setFamilyCertHash(
+        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2");
     this.relays.put("000C5F55BD4814B917CC474BD537F1A3B33CCE2A",
         relayTorkaZ);
     org.torproject.metrics.onionoo.docs.SummaryDocument relayFerrari458 =
@@ -168,6 +172,10 @@ public class ResourceServletTest {
         new TreeSet<>(Arrays.asList(
             "c-68-38-171-200.hsd1.in.comcast.net")),
         null, null, false, null);
+    relayFerrari458.setFamilyIds(Arrays.asList(
+        "Or+tKhdy84NCOAz/Qqk6KPxAdK4Thw/meE58qv1jjY8"));
+    relayFerrari458.setFamilyCertHash(
+        "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2");
     this.relays.put("001C13B3A55A71B977CA65EC85539D79C653A3FC",
         relayFerrari458);
     org.torproject.metrics.onionoo.docs.SummaryDocument relayTimMayTribute =
@@ -1965,5 +1973,71 @@ public class ResourceServletTest {
   @Test
   public void testRecommendedVersionNull() {
     this.assertErrorStatusCode("/summary?recommended_version=null", 400);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyIdMatch() {
+    this.assertSummaryDocument(
+        "/summary?family_id=Or+tKhdy84NCOAz/Qqk6KPxAdK4Thw/meE58qv1jjY8",
+        2, null, 0, null);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyIdNoMatch() {
+    this.assertSummaryDocument(
+        "/summary?family_id=Xr+tKhdy84NCOAz/Qqk6KPxAdK4Thw/meE58qv1jjY8",
+        0, null, 0, null);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyIdInvalid() {
+    this.assertErrorStatusCode(
+        "/summary?family_id=invalid!@#$", 400);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyIdTooLong() {
+    this.assertErrorStatusCode(
+        "/summary?family_id="
+        + "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeefffffffffffffff00",
+        400);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyCertMatch() {
+    this.assertSummaryDocument(
+        "/summary?family_cert="
+        + "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+        2, null, 0, null);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyCertUpperCase() {
+    this.assertSummaryDocument(
+        "/summary?family_cert="
+        + "A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4E5F6A1B2",
+        2, null, 0, null);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyCertNoMatch() {
+    this.assertSummaryDocument(
+        "/summary?family_cert="
+        + "0000000000000000000000000000000000000000000000000000000000000000",
+        0, null, 0, null);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyCertInvalidTooShort() {
+    this.assertErrorStatusCode(
+        "/summary?family_cert=a1b2c3d4", 400);
+  }
+
+  @Test(timeout = 100)
+  public void testFamilyCertInvalidNonHex() {
+    this.assertErrorStatusCode(
+        "/summary?family_cert="
+        + "g1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+        400);
   }
 }

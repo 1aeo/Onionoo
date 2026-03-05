@@ -176,6 +176,18 @@ public class RequestHandler {
     this.transport = transport;
   }
 
+  private String familyId;
+
+  public void setFamilyId(String familyId) {
+    this.familyId = familyId;
+  }
+
+  private String familyCertHash;
+
+  public void setFamilyCertHash(String familyCertHash) {
+    this.familyCertHash = familyCertHash;
+  }
+
   private Map<String, SummaryDocument> filteredRelays = new HashMap<>();
 
   private Map<String, SummaryDocument> filteredBridges = new HashMap<>();
@@ -207,6 +219,8 @@ public class RequestHandler {
     this.filterByRecommendedVersion();
     this.filterByOverloadStatus();
     this.filterByTransport();
+    this.filterByFamilyId();
+    this.filterByFamilyCertHash();
     this.order();
     this.offset();
     this.limit();
@@ -712,6 +726,55 @@ public class RequestHandler {
       }
     }
     this.filteredBridges.keySet().retainAll(keepBridges);
+  }
+
+  private void filterByFamilyId() {
+    if (this.familyId == null) {
+      /* Not filtering by family id. */
+      return;
+    }
+    if (!this.nodeIndex.getRelaysByFamilyId().containsKey(
+        this.familyId)) {
+      this.filteredRelays.clear();
+    } else {
+      Set<String> relaysWithFamilyId =
+          this.nodeIndex.getRelaysByFamilyId().get(this.familyId);
+      Set<String> removeRelays = new HashSet<>();
+      for (String fingerprint : this.filteredRelays.keySet()) {
+        if (!relaysWithFamilyId.contains(fingerprint)) {
+          removeRelays.add(fingerprint);
+        }
+      }
+      for (String fingerprint : removeRelays) {
+        this.filteredRelays.remove(fingerprint);
+      }
+    }
+    this.filteredBridges.clear();
+  }
+
+  private void filterByFamilyCertHash() {
+    if (this.familyCertHash == null) {
+      /* Not filtering by family cert hash. */
+      return;
+    }
+    if (!this.nodeIndex.getRelaysByFamilyCertHash().containsKey(
+        this.familyCertHash)) {
+      this.filteredRelays.clear();
+    } else {
+      Set<String> relaysWithFamilyCertHash =
+          this.nodeIndex.getRelaysByFamilyCertHash().get(
+              this.familyCertHash);
+      Set<String> removeRelays = new HashSet<>();
+      for (String fingerprint : this.filteredRelays.keySet()) {
+        if (!relaysWithFamilyCertHash.contains(fingerprint)) {
+          removeRelays.add(fingerprint);
+        }
+      }
+      for (String fingerprint : removeRelays) {
+        this.filteredRelays.remove(fingerprint);
+      }
+    }
+    this.filteredBridges.clear();
   }
 
   private void order() {

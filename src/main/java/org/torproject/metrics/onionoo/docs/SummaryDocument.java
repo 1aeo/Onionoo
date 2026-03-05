@@ -372,6 +372,29 @@ public class SummaryDocument extends Document {
     return this.transports;
   }
 
+  @JsonProperty("fi")
+  private List<String> familyIds;
+
+  public void setFamilyIds(List<String> familyIds) {
+    this.familyIds = (familyIds != null && !familyIds.isEmpty())
+        ? familyIds : null;
+  }
+
+  public List<String> getFamilyIds() {
+    return this.familyIds;
+  }
+
+  @JsonProperty("fc")
+  private String familyCertHash;
+
+  public void setFamilyCertHash(String familyCertHash) {
+    this.familyCertHash = familyCertHash;
+  }
+
+  public String getFamilyCertHash() {
+    return this.familyCertHash;
+  }
+
   /** Instantiate an empty summary document. */
   public SummaryDocument() {
     /* empty */
