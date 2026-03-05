@@ -6,7 +6,7 @@ package org.torproject.metrics.onionoo.updater;
 public enum DescriptorType {
   RELAY_CONSENSUSES("relay-descriptors/consensuses"),
   RELAY_SERVER_DESCRIPTORS("relay-descriptors/server-descriptors"),
-  RELAY_MICRODESCRIPTORS("relay-descriptors/microdescriptors"),
+  RELAY_MICRODESCRIPTORS("relay-descriptors/microdescs/micro"),
   RELAY_EXTRA_INFOS("relay-descriptors/extra-infos"),
   EXIT_LISTS("exit-lists"),
   BRIDGE_STATUSES("bridge-descriptors/statuses"),
